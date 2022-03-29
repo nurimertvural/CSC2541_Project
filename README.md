@@ -5,4 +5,4 @@ There are two main files: full_batch_experiments.py and mini_batch_experiments.p
 
 In full_batch_experiments.py, the hessian gradient-overlap and the eigenvectors-overlap is computed by using all training-data. The hessian-gradient overlap is computed at the end of each epoch, whereas the eigenvectors-overlap is computed at the end of each five-epoch period (and the overlap is computed with repect to the previously calculated eigenvectors). I run a simple experiment with batch sizes 32, 128 and 1024. The plot is given as:
 
-<img src="fhessianoverlap.png" width="100" height="100">
+<img src="fhessianoverlap.png" width="250" height="250">
