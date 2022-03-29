@@ -1,9 +1,9 @@
 # CSC2541_Project
 In this repository, I share the codes I wrote for the Colab.
 
-There are two main parts: full_batch_experiments.py and mini_batch_experiments.py
+There are two main parts: **full_batch_experiments.py** and **mini_batch_experiments.py**. The hessian computations are done in **hessian_computation.py**. The top k ( = 10) eigenvectors and eigenvalues of the Hessian is computed by using the Lanczos method, implemented in **lanczos.py**.
 
-* In both parts, I only considered a two-layer FC model with 128-dimensional hidden units, run on MNIST dataset.
+* In both main parts, I only considered a two-layer FC model with 128-dimensional hidden units, run on MNIST dataset.
 
 * In full_batch_experiments.py, hessian-gradient overlaps and eigenvector overlaps are computed by using all training-data (i.e., both gradients and Hessians are computed by using all data, not minibatch). Hessian-gradient overlaps are computed at the end of each epoch, whereas eigenvector overlaps are computed at the end of each five-epoch period (and overlaps are calculated with respect to the eigenvectors computed five epochs before). I run a simple experiment with batch sizes of 32, 128, and 1024. The plot is given below (left).
 
