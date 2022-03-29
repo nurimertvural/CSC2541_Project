@@ -1,5 +1,5 @@
 # CSC2541_Project
-In this repository, I share the codes I wrote for the Colab note.
+In this repository, I share the codes I wrote for the Colab.
 
 There are two main parts: full_batch_experiments.py and mini_batch_experiments.py
 
