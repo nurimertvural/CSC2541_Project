@@ -11,6 +11,6 @@ There are two main parts: **full_batch_experiments.py** and **mini_batch_experim
 * In mini_batch_experiments.py, only hessian-gradient overlaps are computed. They are computed by using mini-batches at each time-step. The overlap of an epoch is set to the mean of the overlaps computed during that epoch. Here as well, I run a simple experiment with batch sizes of 32, 128, and 1024. The plot is given below (right).
 
 <p align="center">
-   <img src="results/fhessianoverlap.png" width="350" height="350">
-  <img   src="results/mhessianoverlap.png" width="350" height="350">
+   <img src="result/fhessianoverlap.png" width="350" height="350">
+  <img   src="result/mhessianoverlap.png" width="350" height="350">
 </p>
