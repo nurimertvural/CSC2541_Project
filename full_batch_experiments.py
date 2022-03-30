@@ -40,7 +40,7 @@ test_labels = jnp.eye(NUM_CLASSES)[np_labels]
 
 
 step_size   = 0.001
-batch_size  = 128
+batch_size  = 32
 NUM_EPOCHS  = 50
 momentum_mass = 0.9
 # Define Architectures
@@ -108,12 +108,12 @@ def update(i, opt_state, batch):
 opt_state = opt_init(init_params)
 itercount = itertools.count()
 
-order = 20
+order = 50
 hvp_cl = lambda v: hessian_computation.hvp2(loss, params, (train_images, train_labels), v)
 key, split = random.split(key)
 
-Hg_overlap_vec128 = jnp.zeros( shape = (NUM_EPOCHS,) )
-Ev_overlap_vec128 = jnp.zeros( shape = (1+ (NUM_EPOCHS//5),) )
+Hg_overlap_vec32 = jnp.zeros( shape = (NUM_EPOCHS,) )
+Ev_overlap_vec32 = jnp.zeros( shape = (1+ (NUM_EPOCHS//5),) )
 
 print("\nStarting training...")
 for epoch in range(NUM_EPOCHS):
@@ -130,24 +130,27 @@ for epoch in range(NUM_EPOCHS):
   flat_grads, _ = ravel_pytree(grads)
   Hg = hvp_cl(flat_grads)
   Hg_overlap = jnp.dot(flat_grads, Hg) / (jnp.linalg.norm(Hg) * jnp.linalg.norm(flat_grads))
-  Hg_overlap_vec128 = Hg_overlap_vec128.at[epoch].set(Hg_overlap)
+  Hg_overlap_vec32 = Hg_overlap_vec32.at[epoch].set(Hg_overlap)
   print("Hg_overlap: ", Hg_overlap)
   
   if(epoch == 0):
-    tridiag, pre_vecs = lanczos.lanczos_alg(hvp_cl, flat_grads.shape[0], order, split)
-    eigs_tridiag, _ = jnp.linalg.eigh(tridiag)
+    tridiag, lancsoz_vecs = lanczos.lanczos_alg(hvp_cl, flat_grads.shape[0], order, split)
+    eigs_tridiag, evecs_tridiag = jnp.linalg.eigh(tridiag)
     eigs_tridiag = eigs_tridiag[-11:]
-    Ev_overlap_vec128 = Ev_overlap_vec128.at[0].set(0)
+    
+    pre_vecs = np.dot(evecs_tridiag.T, lancsoz_vecs)
+    Ev_overlap_vec32 = Ev_overlap_vec32.at[0].set(0)
     print(eigs_tridiag)
   elif( (epoch+1)%5 == 0 ):
-    tridiag, vecs = lanczos.lanczos_alg(hvp_cl, flat_grads.shape[0], order, split)
-    eigs_tridiag, _ = jnp.linalg.eigh(tridiag)
+    tridiag, lancsoz_vecs = lanczos.lanczos_alg(hvp_cl, flat_grads.shape[0], order, split)
+    eigs_tridiag, evecs_tridiag = jnp.linalg.eigh(tridiag)
     eigs_tridiag = eigs_tridiag[-11:]
     print(eigs_tridiag)
-    Ev_overlap = jnp.sum(vecs[0:10,] * pre_vecs[0:10,]) / jnp.sqrt( jnp.sum(vecs[0:10,]*vecs[0:10,]) * jnp.sum(pre_vecs[0:10,]*pre_vecs[0:10,]) )
-    Ev_overlap_vec128 = Ev_overlap_vec128.at[(epoch//5)+1].set(Ev_overlap)
+    eig_vecs = np.dot(evecs_tridiag.T, lancsoz_vecs)
+    Ev_overlap = jnp.sum(eig_vecs[0:10,] * pre_vecs[0:10,]) / jnp.sqrt( jnp.sum(eig_vecs[0:10,]*eig_vecs[0:10,]) * jnp.sum(pre_vecs[0:10,]*pre_vecs[0:10,]) )
+    Ev_overlap_vec32 = Ev_overlap_vec32.at[(epoch//5)+1].set(Ev_overlap)
     print("Ev_overlap: ", Ev_overlap)
-    pre_vecs = vecs
+    pre_vecs = eig_vecs
   
   epoch_time = time.time() - start_time
 
@@ -161,15 +164,15 @@ for epoch in range(NUM_EPOCHS):
 
 fig, ax = plt.subplots(2,1)
 ax[0].plot( list(range(1,NUM_EPOCHS+1))   , Hg_overlap_vec32  , label = 'Batch_size = 32', zorder = 1)
-ax[0].plot( list(range(1,NUM_EPOCHS+1))   , Hg_overlap_vec128 , label = 'Batch_size = 128', zorder = 1)
-ax[0].plot( list(range(1,NUM_EPOCHS+1))   , Hg_overlap_vec1024, label = 'Batch_size = 1024', zorder = 1)
+# ax[0].plot( list(range(1,NUM_EPOCHS+1))   , Hg_overlap_vec128 , label = 'Batch_size = 128', zorder = 1)
+# ax[0].plot( list(range(1,NUM_EPOCHS+1))   , Hg_overlap_vec1024, label = 'Batch_size = 1024', zorder = 1)
 ax[0].grid(True)
 ax[0].set_title('Hessian Gradient Overlap')
 ax[0].set_ylabel('Overlap')
 ax[0].legend()
 ax[1].plot( list(range(0, NUM_EPOCHS+1,5)), Ev_overlap_vec32  , label = 'Batch_size = 32', zorder = 2)
-ax[1].plot( list(range(0, NUM_EPOCHS+1,5)), Ev_overlap_vec128 , label = 'Batch_size = 128', zorder = 2)
-ax[1].plot( list(range(0, NUM_EPOCHS+1,5)), Ev_overlap_vec1024, label = 'Batch_size = 1024', zorder = 2)
+# ax[1].plot( list(range(0, NUM_EPOCHS+1,5)), Ev_overlap_vec128 , label = 'Batch_size = 128', zorder = 2)
+# ax[1].plot( list(range(0, NUM_EPOCHS+1,5)), Ev_overlap_vec1024, label = 'Batch_size = 1024', zorder = 2)
 ax[1].grid(True)
 ax[1].set_title('Eigenvectors Overlap (k = 10)')
 ax[1].set_ylabel('Overlap')
